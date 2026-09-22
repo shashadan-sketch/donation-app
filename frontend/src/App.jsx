@@ -29,7 +29,7 @@ export default function App() {
 
   const handlePayment = (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.email || !formData.amount) {
+    if (!formData.name || !formData.phone || !formData.amount) {
       alert("Please fill all details");
       return;
     }
