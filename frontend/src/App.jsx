@@ -7,7 +7,7 @@ const API_URL = 'http://localhost:5000/api';
 export default function App() {
   const [formData, setFormData] = useState({
     name: '',
-    email: '',
+    phone: '',
     amount: ''
   });
   const [loading, setLoading] = useState(false);
@@ -96,19 +96,21 @@ export default function App() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase text-slate-600 mb-1">
-              Email Address
-            </label>
-            <input
-              type="email"
-              name="email"
-              required
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="name@example.com"
-              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            />
-          </div>
+  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">
+    Phone Number
+  </label>
+  <input
+    type="tel"
+    name="phone"
+    required
+    value={formData.phone || ''}
+    onChange={handleChange}
+    placeholder="Enter 10-digit mobile number"
+    pattern="[0-9]{10}"
+    maxLength="10"
+    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+  />
+</div>
 
           <div>
             <label className="block text-xs font-semibold uppercase text-slate-600 mb-1">
