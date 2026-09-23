@@ -1,5 +1,6 @@
 import QRCode from "react-qr-code";
 import React, { useState } from 'react';
+import jsPDF from 'jspdf';
 
 export default function App() {
   const [formData, setFormData] = useState({
@@ -10,6 +11,9 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState({ text: '', type: '' });
   const [showQr, setShowQr] = useState(false);
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
+  const [receiptData, setReceiptData] = useState(null);
+
   const goal = 100000;
   const collected = 45000;
   const progress = Math.min((collected / goal) * 100, 100);
@@ -33,16 +37,135 @@ export default function App() {
     setShowQr(true);
   };
 
+  // Payment Confirmation & Receipt Generation Logic
+  const handlePaymentComplete = () => {
+    const transactionDetails = {
+      receiptNo: `REC-${Date.now().toString().slice(-6)}`,
+      date: new Date().toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      }),
+      donorName: formData.name,
+      phone: formData.phone,
+      amount: formData.amount,
+      upiId: 'sdnsheikh375@okhdfcbank'
+    };
+
+    setReceiptData(transactionDetails);
+    setShowQr(false);
+    setShowReceiptModal(true);
+  };
+
+  // PDF Generator using jsPDF
+  const downloadReceiptPDF = () => {
+    if (!receiptData) return;
+
+    const doc = new jsPDF();
+
+    // Border & Styling
+    doc.setDrawColor(200, 200, 200);
+    doc.rect(10, 10, 190, 277);
+
+    // Header / Trust Mark
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(22);
+    doc.setTextColor(37, 99, 235); // Blue
+    doc.text("DONATION ACKNOWLEDGEMENT", 105, 28, { align: "center" });
+
+    doc.setFontSize(11);
+    doc.setTextColor(100, 116, 139);
+    doc.setFont("helvetica", "normal");
+    doc.text("Empower Underprivileged Students - Digital Learning Initiative", 105, 36, { align: "center" });
+
+    doc.setDrawColor(226, 232, 240);
+    doc.line(20, 42, 190, 42);
+
+    // Receipt Meta Details
+    doc.setFontSize(10);
+    doc.setTextColor(71, 85, 105);
+    doc.text(`Receipt No: ${receiptData.receiptNo}`, 20, 52);
+    doc.text(`Date: ${receiptData.date}`, 145, 52);
+
+    // Donor Details Box
+    doc.setFillColor(248, 250, 252);
+    doc.roundedRect(20, 60, 170, 75, 4, 4, "F");
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.setTextColor(15, 23, 42);
+    doc.text("Contribution Summary", 30, 72);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    doc.setTextColor(51, 65, 85);
+    doc.text(`Donor Name:`, 30, 85);
+    doc.setFont("helvetica", "bold");
+    doc.text(`${receiptData.donorName}`, 75, 85);
+
+    doc.setFont("helvetica", "normal");
+    doc.text(`Contact Number:`, 30, 95);
+    doc.setFont("helvetica", "bold");
+    doc.text(`${receiptData.phone}`, 75, 95);
+
+    doc.setFont("helvetica", "normal");
+    doc.text(`Amount Contributed:`, 30, 105);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(22, 101, 52); // Green
+    doc.text(`INR ${receiptData.amount}/-`, 75, 105);
+
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(51, 65, 85);
+    doc.text(`Paid to UPI ID:`, 30, 115);
+    doc.text(`${receiptData.upiId}`, 75, 115);
+
+    doc.line(20, 145, 190, 145);
+
+    // Note & Tax details
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(15, 23, 42);
+    doc.text("Tax Exemption & Notice:", 20, 158);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9.5);
+    doc.setTextColor(100, 116, 139);
+    doc.text(
+      "1. Thank you for supporting student digital literacy. Your support aids device funding & access.",
+      20,
+      166
+    );
+    doc.text(
+      "2. Eligible for deductions under 80G as per government regulations.",
+      20,
+      174
+    );
+    doc.text(
+      "3. This is a computer generated acknowledgement slip and does not require a physical signature.",
+      20,
+      182
+    );
+
+    // Footer
+    doc.setDrawColor(226, 232, 240);
+    doc.line(20, 250, 190, 250);
+    doc.setFontSize(9);
+    doc.setTextColor(148, 163, 184);
+    doc.text("Student Welfare Digital Initiative • Verified Campaign", 105, 260, { align: "center" });
+
+    // Download PDF directly
+    doc.save(`Donation_Receipt_${receiptData.receiptNo}.pdf`);
+  };
+
   return (
     <div className="min-h-screen bg-slate-100 py-8 px-4 sm:px-6 lg:px-8 flex flex-col justify-center items-center">
       
-      {/* Main Container: 2-Column Split for Desktop, 1-Column for Mobile */}
+      {/* Main Container: 2-Column Split */}
       <div className="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
         {/* LEFT COLUMN: Campaign Story, Image & Impact */}
         <div className="lg:col-span-7 bg-white rounded-3xl shadow-sm border border-slate-200/80 p-6 sm:p-8 space-y-6">
           
-          {/* Main Campaign Image with Badge */}
           <div className="relative w-full h-64 sm:h-72 rounded-2xl overflow-hidden shadow-inner group">
             <img 
               src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=1200&q=80" 
@@ -112,7 +235,6 @@ export default function App() {
         {/* RIGHT COLUMN: Interactive Donation Form */}
         <div className="lg:col-span-5 bg-white rounded-3xl shadow-xl border border-slate-100 p-6 sm:p-8 sticky top-6">
           
-          {/* Header */}
           <div className="text-center mb-5">
             <span className="inline-block px-3 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full uppercase tracking-wider mb-2 border border-blue-200">
               Active Campaign
@@ -136,19 +258,6 @@ export default function App() {
               ></div>
             </div>
           </div>
-
-          {/* Feedback Alert */}
-          {statusMessage.text && (
-            <div
-              className={`p-3 rounded-lg text-sm mb-4 text-center font-medium ${
-                statusMessage.type === 'success'
-                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                  : 'bg-rose-50 text-rose-700 border border-rose-200'
-              }`}
-            >
-              {statusMessage.text}
-            </div>
-          )}
 
           {/* Form */}
           <form onSubmit={handlePayment} className="space-y-4">
@@ -289,10 +398,7 @@ export default function App() {
             <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
               <button
                 type="button"
-                onClick={() => {
-                  alert('Thank you! Payment completed.');
-                  setShowQr(false);
-                }}
+                onClick={handlePaymentComplete}
                 style={{
                   background: '#2563eb',
                   color: '#fff',
@@ -324,6 +430,53 @@ export default function App() {
           </div>
         </div>
       )}
-    </div>
-  );
-}
+
+      {/* ACKNOWLEDGEMENT / RECEIPT MODAL */}
+      {showReceiptModal && receiptData && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.7)',
+          backdropFilter: 'blur(5px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999
+        }}>
+          <div className="bg-white p-6 sm:p-8 rounded-3xl max-w-md w-full mx-4 shadow-2xl text-center space-y-5">
+            <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-3xl shadow-sm">
+              ✓
+            </div>
+
+            <div>
+              <h3 className="text-xl font-bold text-slate-800">Thank You, {receiptData.donorName}!</h3>
+              <p className="text-slate-500 text-xs sm:text-sm mt-1">
+                Your donation of <strong className="text-slate-800">₹{receiptData.amount}</strong> has been acknowledged.
+              </p>
+            </div>
+
+            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 text-left text-xs space-y-2 text-slate-600">
+              <div className="flex justify-between">
+                <span>Receipt Number:</span>
+                <span className="font-semibold text-slate-800">{receiptData.receiptNo}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Date:</span>
+                <span className="font-semibold text-slate-800">{receiptData.date}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Phone:</span>
+                <span className="font-semibold text-slate-800">{receiptData.phone}</span>
+              </div>
+              <div className="flex justify-between border-t border-slate-200 pt-2 font-medium text-slate-800">
+                <span>Amount:</span>
+                <span className="text-emerald-600 font-bold text-sm">₹{receiptData.amount}</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                type="button"
+                onClick={downloadReceiptPDF}
+                className="flex-1 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+              ></button>
