@@ -1,8 +1,5 @@
 import QRCode from "react-qr-code";
 import React, { useState } from 'react';
-import axios from 'axios';
-
-const API_URL = 'http://localhost:5000/api';
 
 export default function App() {
   const [formData, setFormData] = useState({
@@ -17,7 +14,7 @@ export default function App() {
   const collected = 45000;
   const progress = Math.min((collected / goal) * 100, 100);
 
-  const presetAmounts = [1, 500, 1000, 2500];
+  const presetAmounts = [100, 500, 1000, 2500];
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -37,139 +34,217 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col justify-center items-center p-4">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-6 sm:p-8">
+    <div className="min-h-screen bg-slate-100 py-8 px-4 sm:px-6 lg:px-8 flex flex-col justify-center items-center">
+      
+      {/* Main Container: 2-Column Split for Desktop, 1-Column for Mobile */}
+      <div className="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
-        {/* Header */}
-        <div className="text-center mb-6">
-          <span className="inline-block px-3 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full uppercase tracking-wider mb-2 border border-blue-200">
-            Active Campaign
-          </span>
-          <h1 className="text-2xl font-bold text-slate-800">Support Student Welfare</h1>
-          <p className="text-slate-500 text-sm mt-1">
-            Help provide digital learning resources to underprivileged students.
-          </p>
-        </div>
-
-        {/* Campaign Progress */}
-        <div className="mb-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
-          <div className="flex justify-between text-sm font-semibold text-slate-700 mb-2">
-            <span>₹{collected.toLocaleString()} raised</span>
-            <span className="text-slate-400">Target: ₹{goal.toLocaleString()}</span>
-          </div>
-          <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
-            <div
-              className="bg-blue-600 h-2.5 rounded-full transition-all duration-500"
-              style={{ width: `${progress}%` }}
-            ></div>
-          </div>
-        </div>
-
-        {/* Feedback Alert */}
-        {statusMessage.text && (
-          <div
-            className={`p-3 rounded-lg text-sm mb-4 text-center font-medium ${
-              statusMessage.type === 'success'
-                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                : 'bg-rose-50 text-rose-700 border border-rose-200'
-            }`}
-          >
-            {statusMessage.text}
-          </div>
-        )}
-
-        {/* Form */}
-        <form onSubmit={handlePayment} className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold uppercase text-slate-600 mb-1">
-              Your Name
-            </label>
-            <input
-              type="text"
-              name="name"
-              required
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="Full Name"
-              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+        {/* LEFT COLUMN: Campaign Story, Image & Impact */}
+        <div className="lg:col-span-7 bg-white rounded-3xl shadow-sm border border-slate-200/80 p-6 sm:p-8 space-y-6">
+          
+          {/* Main Campaign Image with Badge */}
+          <div className="relative w-full h-64 sm:h-72 rounded-2xl overflow-hidden shadow-inner group">
+            <img 
+              src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=1200&q=80" 
+              alt="Students studying" 
+              className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500 ease-out"
             />
+            <div className="absolute top-4 left-4 bg-slate-900/80 backdrop-blur-md text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow">
+              Verified Non-Profit Cause
+            </div>
+            <div className="absolute bottom-4 left-4 right-4 bg-gradient-to-t from-black/70 to-transparent p-3 rounded-xl text-white">
+              <span className="text-xs bg-emerald-500/90 text-white px-2 py-0.5 rounded font-medium">80G Tax Exemption</span>
+              <p className="text-xs text-slate-200 mt-1">Donations are 50% tax deductible under section 80G</p>
+            </div>
           </div>
 
           <div>
-  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">
-    Phone Number
-  </label>
-  <input
-    type="tel"
-    name="phone"
-    required
-    value={formData.phone || ''}
-    onChange={handleChange}
-    placeholder="Enter 10-digit mobile number"
-    pattern="[0-9]{10}"
-    maxLength="10"
-    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
-  />
-</div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight leading-snug">
+              Empower Underprivileged Students with Digital Learning Tools
+            </h1>
+            <p className="text-slate-600 text-sm sm:text-base leading-relaxed mt-3">
+              Education is the key to breaking the cycle of poverty. With your support, we provide essential study tablets, high-speed internet connectivity, and quality online learning subscriptions to meritorious students from disadvantaged backgrounds.
+            </p>
+          </div>
 
-          <div>
-            <label className="block text-xs font-semibold uppercase text-slate-600 mb-1">
-              Amount (INR)
-            </label>
-            
-            <div className="grid grid-cols-4 gap-2 mb-2">
-              {presetAmounts.map((amt) => (
-                <button
-                  key={amt}
-                  type="button"
-                  onClick={() => handlePresetSelect(amt)}
-                  className={`py-1.5 text-xs font-semibold rounded-md border transition-all cursor-pointer ${
-                    Number(formData.amount) === amt
-                      ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                  }`}
-                >
-                  ₹{amt}
-                </button>
-              ))}
+          {/* Trust Highlights */}
+          <div className="grid grid-cols-3 gap-3 pt-4 border-t border-slate-100">
+            <div className="flex items-center space-x-2.5 p-2 rounded-xl bg-slate-50">
+              <span className="text-2xl">🛡️</span>
+              <div>
+                <h4 className="text-xs font-bold text-slate-800">100% Direct</h4>
+                <p className="text-[11px] text-slate-500 leading-tight">Zero middlemen</p>
+              </div>
             </div>
+            <div className="flex items-center space-x-2.5 p-2 rounded-xl bg-slate-50">
+              <span className="text-2xl">⚡</span>
+              <div>
+                <h4 className="text-xs font-bold text-slate-800">Instant UPI</h4>
+                <p className="text-[11px] text-slate-500 leading-tight">Real-time credit</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2.5 p-2 rounded-xl bg-slate-50">
+              <span className="text-2xl">🤝</span>
+              <div>
+                <h4 className="text-xs font-bold text-slate-800">Transparency</h4>
+                <p className="text-[11px] text-slate-500 leading-tight">Receipt proof</p>
+              </div>
+            </div>
+          </div>
 
-            <div className="relative">
-              <span className="absolute left-3.5 top-2.5 text-slate-400 font-bold">₹</span>
+          {/* Social Proof */}
+          <div className="bg-blue-50/70 border border-blue-100 rounded-2xl p-4 flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="flex -space-x-2 overflow-hidden">
+                <span className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-blue-400 text-white font-bold text-xs flex items-center justify-center">S</span>
+                <span className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-indigo-500 text-white font-bold text-xs flex items-center justify-center">A</span>
+                <span className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-emerald-500 text-white font-bold text-xs flex items-center justify-center">M</span>
+              </div>
+              <p className="text-xs text-slate-700 font-medium">
+                Joined by <strong className="text-slate-900 font-semibold">120+ active donors</strong> this week
+              </p>
+            </div>
+            <span className="text-xs font-semibold text-blue-700">#EducationForAll</span>
+          </div>
+
+        </div>
+
+        {/* RIGHT COLUMN: Interactive Donation Form */}
+        <div className="lg:col-span-5 bg-white rounded-3xl shadow-xl border border-slate-100 p-6 sm:p-8 sticky top-6">
+          
+          {/* Header */}
+          <div className="text-center mb-5">
+            <span className="inline-block px-3 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full uppercase tracking-wider mb-2 border border-blue-200">
+              Active Campaign
+            </span>
+            <h2 className="text-xl font-bold text-slate-800">Support Student Welfare</h2>
+            <p className="text-slate-500 text-xs mt-1">
+              Choose an amount to make an immediate impact
+            </p>
+          </div>
+
+          {/* Campaign Progress */}
+          <div className="mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-200/70">
+            <div className="flex justify-between text-xs sm:text-sm font-semibold text-slate-700 mb-2">
+              <span className="text-blue-600 font-bold">₹{collected.toLocaleString()} raised</span>
+              <span className="text-slate-400 font-normal">Target: ₹{goal.toLocaleString()}</span>
+            </div>
+            <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+              <div
+                className="bg-blue-600 h-2.5 rounded-full transition-all duration-500"
+                style={{ width: `${progress}%` }}
+              ></div>
+            </div>
+          </div>
+
+          {/* Feedback Alert */}
+          {statusMessage.text && (
+            <div
+              className={`p-3 rounded-lg text-sm mb-4 text-center font-medium ${
+                statusMessage.type === 'success'
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                  : 'bg-rose-50 text-rose-700 border border-rose-200'
+              }`}
+            >
+              {statusMessage.text}
+            </div>
+          )}
+
+          {/* Form */}
+          <form onSubmit={handlePayment} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold uppercase text-slate-600 mb-1 tracking-wide">
+                Your Name
+              </label>
               <input
-                type="number"
-                name="amount"
-                min="1"
+                type="text"
+                name="name"
                 required
-                value={formData.amount}
+                value={formData.name}
                 onChange={handleChange}
-                placeholder="Enter custom amount"
-                className="w-full pl-8 pr-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                placeholder="Full Name"
+                className="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
               />
             </div>
+
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-1">
+                Phone Number
+              </label>
+              <input
+                type="tel"
+                name="phone"
+                required
+                value={formData.phone || ''}
+                onChange={handleChange}
+                placeholder="Enter 10-digit mobile number"
+                pattern="[0-9]{10}"
+                maxLength="10"
+                className="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold uppercase text-slate-600 mb-1.5 tracking-wide">
+                Select or Enter Amount (INR)
+              </label>
+              
+              <div className="grid grid-cols-4 gap-2 mb-2.5">
+                {presetAmounts.map((amt) => (
+                  <button
+                    key={amt}
+                    type="button"
+                    onClick={() => handlePresetSelect(amt)}
+                    className={`py-2 text-xs font-semibold rounded-xl border transition-all cursor-pointer ${
+                      Number(formData.amount) === amt
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20'
+                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    ₹{amt}
+                  </button>
+                ))}
+              </div>
+
+              <div className="relative">
+                <span className="absolute left-3.5 top-2.5 text-slate-400 font-bold">₹</span>
+                <input
+                  type="number"
+                  name="amount"
+                  min="1"
+                  required
+                  value={formData.amount}
+                  onChange={handleChange}
+                  placeholder="Enter custom amount"
+                  className="w-full pl-8 pr-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-600/30 transition-all duration-200 disabled:opacity-50 mt-3 cursor-pointer active:scale-[0.99]"
+            >
+              {loading ? 'Opening Gateway...' : `Donate ₹${formData.amount || '0'}`}
+            </button>
+          </form>
+
+          <p className="text-center text-xs text-slate-400 mt-4 flex items-center justify-center gap-1">
+            🔒 Secure UPI payment powered by QR code
+          </p>
+          
+          <div className="flex flex-wrap justify-center gap-3 text-xs text-slate-400 mt-4 border-t border-slate-100 pt-3">
+            <a href="/about.html" target="_blank" rel="noreferrer" className="hover:text-blue-600">About Us</a>
+            <span>•</span>
+            <a href="/contact.html" target="_blank" rel="noreferrer" className="hover:text-blue-600">Contact Us</a>
+            <span>•</span>
+            <a href="/terms.html" target="_blank" rel="noreferrer" className="hover:text-blue-600">Terms</a>
+            <span>•</span>
+            <a href="/privacy.html" target="_blank" rel="noreferrer" className="hover:text-blue-600">Privacy</a>
           </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200 disabled:opacity-50 mt-2 cursor-pointer"
-          >
-            {loading ? 'Opening Gateway...' : `Donate ₹${formData.amount || '0'}`}
-          </button>
-        </form>
-
-        <p className="text-center text-xs text-slate-400 mt-4">
-          🔒 Secure UPI payment powered by QR code
-        </p>
-        <div className="flex flex-wrap justify-center gap-3 text-xs text-slate-500 mt-4 border-t border-slate-200 pt-3">
-          <a href="/about.html" target="_blank" rel="noreferrer" className="hover:text-blue-600 hover:underline">About Us</a>
-          <span>•</span>
-          <a href="/contact.html" target="_blank" rel="noreferrer" className="hover:text-blue-600 hover:underline">Contact Us</a>
-          <span>•</span>
-          <a href="/terms.html" target="_blank" rel="noreferrer" className="hover:text-blue-600 hover:underline">Terms</a>
-          <span>•</span>
-          <a href="/privacy.html" target="_blank" rel="noreferrer" className="hover:text-blue-600 hover:underline">Privacy</a>
         </div>
+
       </div>
 
       {/* UPI QR Modal */}
@@ -178,6 +253,7 @@ export default function App() {
           position: 'fixed',
           top: 0, left: 0, right: 0, bottom: 0,
           backgroundColor: 'rgba(0,0,0,0.7)',
+          backdropFilter: 'blur(4px)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -186,28 +262,28 @@ export default function App() {
           <div style={{
             background: '#ffffff',
             padding: '24px',
-            borderRadius: '16px',
+            borderRadius: '20px',
             textAlign: 'center',
             maxWidth: '340px',
             width: '90%',
-            boxShadow: '0 10px 25px rgba(0,0,0,0.3)'
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)'
           }}>
-            <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: 'bold', color: '#111' }}>
+            <h3 style={{ margin: '0 0 6px 0', fontSize: '18px', fontWeight: 'bold', color: '#0f172a' }}>
               Scan to Pay with UPI
             </h3>
-            <p style={{ margin: '0 0 16px 0', color: '#555', fontSize: '14px' }}>
-              Paying <strong>₹{formData.amount}</strong> to <strong>SDN SHAIKHh</strong>
+            <p style={{ margin: '0 0 16px 0', color: '#64748b', fontSize: '13px' }}>
+              Paying <strong style={{ color: '#0f172a' }}>₹{formData.amount}</strong> to <strong>SDN SHAIKHh</strong>
             </p>
 
-            <div style={{ background: '#fff', padding: '12px', display: 'inline-block', border: '1px solid #eee', borderRadius: '12px' }}>
+            <div style={{ background: '#fff', padding: '12px', display: 'inline-block', border: '1px solid #e2e8f0', borderRadius: '16px' }}>
               <QRCode 
                 value={`upi://pay?pa=sdnsheikh375@okhdfcbank&pn=SDN%20SHAIKHh&am=${formData.amount}&cu=INR`} 
                 size={190} 
               />
             </div>
 
-            <p style={{ marginTop: '12px', fontSize: '12px', color: '#666', wordBreak: 'break-all' }}>
-              UPI ID: <strong>sdnsheikh375@okhdfcbank</strong>
+            <p style={{ marginTop: '12px', fontSize: '12px', color: '#64748b', wordBreak: 'break-all' }}>
+              UPI ID: <strong style={{ color: '#0f172a' }}>sdnsheikh375@okhdfcbank</strong>
             </p>
 
             <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
@@ -222,7 +298,7 @@ export default function App() {
                   color: '#fff',
                   border: 'none',
                   padding: '10px 18px',
-                  borderRadius: '8px',
+                  borderRadius: '10px',
                   fontWeight: '600',
                   cursor: 'pointer'
                 }}
@@ -234,11 +310,11 @@ export default function App() {
                 type="button"
                 onClick={() => setShowQr(false)}
                 style={{
-                  background: '#f3f4f6',
-                  color: '#374151',
+                  background: '#f1f5f9',
+                  color: '#475569',
                   border: 'none',
                   padding: '10px 18px',
-                  borderRadius: '8px',
+                  borderRadius: '10px',
                   cursor: 'pointer'
                 }}
               >
