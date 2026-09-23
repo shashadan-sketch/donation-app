@@ -8,7 +8,7 @@ export default function App() {
     amount: ''
   });
   
-  // Payment states
+  // Payment modal states
   const [showCheckout, setShowCheckout] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState('gpay');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -32,7 +32,7 @@ export default function App() {
     setFormData({ ...formData, amount: val });
   };
 
-  // Form submit -> Open Checkout Modal
+  // Form Submit -> Open Modal
   const handleOpenCheckout = (e) => {
     e.preventDefault();
     if (!formData.name || !formData.phone || !formData.amount) {
@@ -43,11 +43,10 @@ export default function App() {
     setShowCheckout(true);
   };
 
-  // Mock Payment Processing Flow
+  // Payment Processing Simulation
   const processMockPayment = () => {
     setIsProcessing(true);
 
-    // 2-second bank processing simulation
     setTimeout(() => {
       const generatedTxnId = `TXN${Date.now().toString().slice(-8)}`;
       const transactionDetails = {
@@ -68,11 +67,10 @@ export default function App() {
       setIsProcessing(false);
       setPaymentSuccess(true);
 
-      // 800ms baad receipt modal display karein
       setTimeout(() => {
         setShowCheckout(false);
         setShowReceiptModal(true);
-      }, 800);
+      }, 700);
     }, 2000);
   };
 
@@ -369,7 +367,7 @@ export default function App() {
             {/* If Payment Successful Screen */}
             {paymentSuccess ? (
               <div className="py-8 text-center space-y-3">
-                <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-3xl mx-auto animate-bounce">
+                <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-3xl mx-auto">
                   ✓
                 </div>
                 <h4 className="font-bold text-slate-800 text-lg">Payment Received!</h4>
@@ -436,4 +434,94 @@ export default function App() {
                       <span className="text-xl">💳</span>
                       <div>
                         <p className="text-xs font-bold text-slate-800">Debit / Credit Card</p>
-                        <p classN
+                        <p className="text-[11px] text-slate-500">Visa, Mastercard, RuPay</p>
+                      </div>
+                      </div>
+                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${selectedMethod === 'card' ? 'border-blue-600' : 'border-slate-300'}`}>
+                      {selectedMethod === 'card' && <div className="w-2 h-2 rounded-full bg-blue-600"></div>}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={processMockPayment}
+                    className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-blue-500/20 transition-all cursor-pointer"
+                  >
+                    Pay ₹{formData.amount}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowCheckout(false)}
+                    className="w-full py-2.5 text-xs text-slate-500 hover:text-slate-700 cursor-pointer"
+                  >
+                    Cancel Transaction
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Acknowledgement / Receipt Modal (Only displayed AFTER payment success) */}
+      {showReceiptModal && receiptData && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-6 sm:p-8 rounded-3xl max-w-md w-full mx-4 shadow-2xl text-center space-y-5">
+            <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-3xl shadow-sm">
+              ✓
+            </div>
+
+            <div>
+              <h3 className="text-xl font-bold text-slate-800">Thank You, {receiptData.donorName}!</h3>
+              <p className="text-slate-500 text-xs sm:text-sm mt-1">
+                Your payment of <strong className="text-slate-800">₹{receiptData.amount}</strong> was successful.
+              </p>
+            </div>
+
+            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 text-left text-xs space-y-2 text-slate-600">
+              <div className="flex justify-between">
+                <span>Receipt Number:</span>
+                <span className="font-semibold text-slate-800">{receiptData.receiptNo}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Transaction ID:</span>
+                <span className="font-mono text-blue-600 font-semibold">{receiptData.txnId}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Date:</span>
+                <span className="font-semibold text-slate-800">{receiptData.date}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Phone:</span>
+                <span className="font-semibold text-slate-800">{receiptData.phone}</span>
+              </div>
+              <div className="flex justify-between border-t border-slate-200 pt-2 font-medium text-slate-800">
+                <span>Amount Paid:</span>
+                <span className="text-emerald-600 font-bold text-sm">₹{receiptData.amount}</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                type="button"
+                onClick={downloadReceiptPDF}
+                className="flex-1 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>📥</span> Download Receipt (PDF)
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowReceiptModal(false)}
+                className="py-3 px-5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm rounded-xl transition-all cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
