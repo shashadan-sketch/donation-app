@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import QRCode from "react-qr-code";
 import jsPDF from 'jspdf';
 
 export default function App() {
@@ -7,14 +8,12 @@ export default function App() {
     phone: '',
     amount: ''
   });
-  
-  // Payment modal states
-  const [showCheckout, setShowCheckout] = useState(false);
-  const [selectedMethod, setSelectedMethod] = useState('gpay');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentSuccess, setPaymentSuccess] = useState(false);
-  
-  // Receipt modal state
+
+  const [utrNumber, setUtrNumber] = useState('');
+  const [utrError, setUtrError] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
+
+  const [showQrModal, setShowQrModal] = useState(false);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [receiptData, setReceiptData] = useState(null);
 
@@ -32,26 +31,32 @@ export default function App() {
     setFormData({ ...formData, amount: val });
   };
 
-  // Form Submit -> Open Modal
-  const handleOpenCheckout = (e) => {
+  const handleOpenPayment = (e) => {
     e.preventDefault();
     if (!formData.name || !formData.phone || !formData.amount) {
       alert("Please fill all details");
       return;
     }
-    setPaymentSuccess(false);
-    setShowCheckout(true);
+    setUtrNumber('');
+    setUtrError('');
+    setShowQrModal(true);
   };
 
-  // Payment Processing Simulation
-  const processMockPayment = () => {
-    setIsProcessing(true);
+  const handleVerifyAndComplete = () => {
+    // UTR validation: Exactly 12 digits required
+    const cleanUtr = utrNumber.trim();
+    if (!cleanUtr || cleanUtr.length !== 12 || !/^\d{12}$/.test(cleanUtr)) {
+      setUtrError("Please enter a valid 12-digit UPI Reference / UTR Number");
+      return;
+    }
+
+    setUtrError('');
+    setIsVerifying(true);
 
     setTimeout(() => {
-      const generatedTxnId = `TXN${Date.now().toString().slice(-8)}`;
       const transactionDetails = {
         receiptNo: `REC-${Date.now().toString().slice(-6)}`,
-        txnId: generatedTxnId,
+        txnId: cleanUtr,
         date: new Date().toLocaleDateString('en-IN', {
           day: '2-digit',
           month: 'short',
@@ -60,18 +65,14 @@ export default function App() {
         donorName: formData.name,
         phone: formData.phone,
         amount: formData.amount,
-        paymentMethod: selectedMethod.toUpperCase(),
+        upiId: 'sdnsheikh375@okhdfcbank'
       };
 
       setReceiptData(transactionDetails);
-      setIsProcessing(false);
-      setPaymentSuccess(true);
-
-      setTimeout(() => {
-        setShowCheckout(false);
-        setShowReceiptModal(true);
-      }, 700);
-    }, 2000);
+      setIsVerifying(false);
+      setShowQrModal(false);
+      setShowReceiptModal(true);
+    }, 1200);
   };
 
   const downloadReceiptPDF = () => {
@@ -111,7 +112,7 @@ export default function App() {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(11);
     doc.setTextColor(51, 65, 85);
-    
+
     doc.text("Donor Name:", 30, 85);
     doc.setFont("helvetica", "bold");
     doc.text(`${receiptData.donorName}`, 80, 85);
@@ -122,14 +123,14 @@ export default function App() {
     doc.text(`${receiptData.phone}`, 80, 95);
 
     doc.setFont("helvetica", "normal");
-    doc.text("Transaction ID:", 30, 105);
+    doc.text("UTR / Ref No:", 30, 105);
     doc.setFont("helvetica", "bold");
     doc.text(`${receiptData.txnId}`, 80, 105);
 
     doc.setFont("helvetica", "normal");
-    doc.text("Payment Mode:", 30, 115);
+    doc.text("Paid to UPI:", 30, 115);
     doc.setFont("helvetica", "bold");
-    doc.text(`${receiptData.paymentMethod}`, 80, 115);
+    doc.text(`${receiptData.upiId}`, 80, 115);
 
     doc.setFont("helvetica", "normal");
     doc.text("Amount Contributed:", 30, 125);
@@ -203,13 +204,13 @@ export default function App() {
               <span className="text-2xl">⚡</span>
               <div>
                 <h4 className="text-xs font-bold text-slate-800">Instant UPI</h4>
-                <p className="text-[11px] text-slate-500 leading-tight">Real-time credit</p>
+                <p className="text-[11px] text-slate-500 leading-tight">Direct transfer</p>
               </div>
             </div>
             <div className="flex items-center space-x-2.5 p-2 rounded-xl bg-slate-50">
               <span className="text-2xl">🤝</span>
               <div>
-                <h4 className="text-xs font-bold text-slate-800">Transparency</h4>
+                <h4 className="text-xs font-bold text-slate-800">UTR Verified</h4>
                 <p className="text-[11px] text-slate-500 leading-tight">Receipt proof</p>
               </div>
             </div>
@@ -255,7 +256,7 @@ export default function App() {
             </div>
           </div>
 
-          <form onSubmit={handleOpenCheckout} className="space-y-4">
+          <form onSubmit={handleOpenPayment} className="space-y-4">
             <div>
               <label className="block text-xs font-semibold uppercase text-slate-600 mb-1 tracking-wide">
                 Your Name
@@ -328,12 +329,12 @@ export default function App() {
               type="submit"
               className="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-600/30 transition-all duration-200 mt-3 cursor-pointer active:scale-[0.99]"
             >
-              Proceed to Donate ₹{formData.amount || '0'}
+              Scan QR & Donate ₹{formData.amount || '0'}
             </button>
           </form>
 
           <p className="text-center text-xs text-slate-400 mt-4 flex items-center justify-center gap-1">
-            🔒 256-Bit Encrypted Secure Checkout
+            🔒 Direct UPI QR with UTR Payment Verification
           </p>
 
           <div className="flex flex-wrap justify-center gap-3 text-xs text-slate-400 mt-4 border-t border-slate-100 pt-3">
@@ -348,124 +349,72 @@ export default function App() {
         </div>
       </div>
 
-      {/* Realistic Payment Gateway Modal */}
-      {showCheckout && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl space-y-5 border border-slate-100">
-            
-            {/* Header */}
-            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-              <div>
-                <h3 className="font-bold text-slate-800 text-base">Payment Gateway</h3>
-                <p className="text-xs text-slate-500">Fast & Secure Checkout</p>
-              </div>
-              <span className="text-xs font-bold bg-blue-50 text-blue-600 px-2.5 py-1 rounded-full">
-                ₹{formData.amount}
-              </span>
+      {/* Interactive UPI QR Modal with UTR Input */}
+      {showQrModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white max-w-sm w-full rounded-3xl p-6 text-center space-y-4 shadow-2xl border border-slate-100">
+            <div>
+              <h3 className="text-lg font-bold text-slate-800">Scan to Pay with UPI</h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Paying <strong className="text-slate-900 font-semibold">₹{formData.amount}</strong> to <strong>SDN SHAIKHh</strong>
+              </p>
             </div>
 
-            {/* If Payment Successful Screen */}
-            {paymentSuccess ? (
-              <div className="py-8 text-center space-y-3">
-                <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-3xl mx-auto">
-                  ✓
-                </div>
-                <h4 className="font-bold text-slate-800 text-lg">Payment Received!</h4>
-                <p className="text-xs text-slate-500">Generating verified receipt...</p>
-              </div>
-            ) : isProcessing ? (
-              /* Processing Animation */
-              <div className="py-10 text-center space-y-4">
-                <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                <h4 className="font-semibold text-slate-800 text-sm">Processing with Bank...</h4>
-                <p className="text-xs text-slate-400">Please do not refresh or press back</p>
-              </div>
-            ) : (
-              /* Payment Method Selection */
-              <>
-                <div className="space-y-2.5">
-                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
-                    Select Payment Option
-                  </label>
-                  
-                  <div 
-                    onClick={() => setSelectedMethod('gpay')}
-                    className={`p-3 rounded-2xl border flex items-center justify-between cursor-pointer transition-all ${
-                      selectedMethod === 'gpay' ? 'border-blue-600 bg-blue-50/50' : 'border-slate-200 hover:bg-slate-50'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-xl">🌐</span>
-                      <div>
-                        <p className="text-xs font-bold text-slate-800">Google Pay (UPI)</p>
-                        <p className="text-[11px] text-slate-500">Instant bank transfer</p>
-                      </div>
-                    </div>
-                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${selectedMethod === 'gpay' ? 'border-blue-600' : 'border-slate-300'}`}>
-                      {selectedMethod === 'gpay' && <div className="w-2 h-2 rounded-full bg-blue-600"></div>}
-                    </div>
-                  </div>
+            {/* Live QR Code Box */}
+            <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 inline-block shadow-inner">
+              <QRCode 
+                value={`upi://pay?pa=sdnsheikh375@okhdfcbank&pn=SDN%20SHAIKHh&am=${formData.amount}&cu=INR`} 
+                size={180} 
+              />
+            </div>
 
-                  <div 
-                    onClick={() => setSelectedMethod('phonepe')}
-                    className={`p-3 rounded-2xl border flex items-center justify-between cursor-pointer transition-all ${
-                      selectedMethod === 'phonepe' ? 'border-blue-600 bg-blue-50/50' : 'border-slate-200 hover:bg-slate-50'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-xl">📱</span>
-                      <div>
-                        <p className="text-xs font-bold text-slate-800">PhonePe / Paytm</p>
-                        <p className="text-[11px] text-slate-500">UPI ID or Mobile</p>
-                      </div>
-                    </div>
-                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${selectedMethod === 'phonepe' ? 'border-blue-600' : 'border-slate-300'}`}>
-                      {selectedMethod === 'phonepe' && <div className="w-2 h-2 rounded-full bg-blue-600"></div>}
-                    </div>
-                  </div>
+            <p className="text-xs text-slate-500">
+              UPI ID: <span className="font-mono font-semibold text-slate-700">sdnsheikh375@okhdfcbank</span>
+            </p>
 
-                  <div 
-                    onClick={() => setSelectedMethod('card')}
-                    className={`p-3 rounded-2xl border flex items-center justify-between cursor-pointer transition-all ${
-                      selectedMethod === 'card' ? 'border-blue-600 bg-blue-50/50' : 'border-slate-200 hover:bg-slate-50'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-xl">💳</span>
-                      <div>
-                        <p className="text-xs font-bold text-slate-800">Debit / Credit Card</p>
-                        <p className="text-[11px] text-slate-500">Visa, Mastercard, RuPay</p>
-                      </div>
-                      </div>
-                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${selectedMethod === 'card' ? 'border-blue-600' : 'border-slate-300'}`}>
-                      {selectedMethod === 'card' && <div className="w-2 h-2 rounded-full bg-blue-600"></div>}
-                    </div>
-                  </div>
-                </div>
+            {/* UTR Input Section */}
+            <div className="text-left bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-2">
+              <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wide">
+                Enter 12-Digit UTR / UPI Ref No. *
+              </label>
+              <input
+                type="text"
+                maxLength="12"
+                value={utrNumber}
+                onChange={(e) => setUtrNumber(e.target.value.replace(/\D/g, ''))}
+                placeholder="e.g. 412356789012"
+                className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              />
+              <p className="text-[10px] text-slate-400">
+                Found on your Google Pay / PhonePe / Paytm transaction success screen.
+              </p>
+              {utrError && (
+                <p className="text-red-500 text-[11px] font-semibold">{utrError}</p>
+              )}
+            </div>
 
-                <div className="space-y-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={processMockPayment}
-                    className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-blue-500/20 transition-all cursor-pointer"
-                  >
-                    Pay ₹{formData.amount}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowCheckout(false)}
-                    className="w-full py-2.5 text-xs text-slate-500 hover:text-slate-700 cursor-pointer"
-                  >
-                    Cancel Transaction
-                  </button>
-                </div>
-              </>
-            )}
+            <div className="flex gap-2.5 pt-1">
+              <button
+                type="button"
+                disabled={isVerifying}
+                onClick={handleVerifyAndComplete}
+                className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50"
+              >
+                {isVerifying ? "Verifying UTR..." : "Verify & Get Receipt"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowQrModal(false)}
+                className="py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Acknowledgement / Receipt Modal (Only displayed AFTER payment success) */}
+      {/* Acknowledgement / Receipt Modal */}
       {showReceiptModal && receiptData && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-4">
           <div className="bg-white p-6 sm:p-8 rounded-3xl max-w-md w-full mx-4 shadow-2xl text-center space-y-5">
@@ -476,7 +425,7 @@ export default function App() {
             <div>
               <h3 className="text-xl font-bold text-slate-800">Thank You, {receiptData.donorName}!</h3>
               <p className="text-slate-500 text-xs sm:text-sm mt-1">
-                Your payment of <strong className="text-slate-800">₹{receiptData.amount}</strong> was successful.
+                Your contribution of <strong className="text-slate-800">₹{receiptData.amount}</strong> is verified.
               </p>
             </div>
 
@@ -486,7 +435,7 @@ export default function App() {
                 <span className="font-semibold text-slate-800">{receiptData.receiptNo}</span>
               </div>
               <div className="flex justify-between">
-                <span>Transaction ID:</span>
+                <span>UTR / Ref ID:</span>
                 <span className="font-mono text-blue-600 font-semibold">{receiptData.txnId}</span>
               </div>
               <div className="flex justify-between">
