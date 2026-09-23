@@ -12,6 +12,15 @@ export default function Home() {
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [receiptData, setReceiptData] = useState(null);
 
+  // Dynamic Recent Donors List
+  const [donorsList, setDonorsList] = useState([
+    { name: "Vikram Malhotra", amount: 1500, time: "3 mins ago" },
+    { name: "Ananya Sharma", amount: 500, time: "18 mins ago" },
+    { name: "Suresh Pillai", amount: 2500, time: "42 mins ago" },
+    { name: "Kavita Deshmukh", amount: 1000, time: "1 hour ago" },
+    { name: "Anonymous Donor", amount: 250, time: "2 hours ago" },
+  ]);
+
   const presetAmounts = [250, 500, 1000, 2500];
 
   const handleOpenPayment = (e) => {
@@ -46,11 +55,22 @@ export default function Home() {
         upiId: 'sdnsheikh375@okhdfcbank'
       };
 
+      // Add to live donor stream
+      setDonorsList(prev => [
+        { name: formData.name, amount: Number(formData.amount), time: "Just now" },
+        ...prev
+      ]);
+
       setReceiptData(transactionDetails);
       setIsVerifying(false);
       setShowQrModal(false);
       setShowReceiptModal(true);
     }, 1200);
+  };
+
+  const shareOnWhatsApp = () => {
+    const msg = encodeURIComponent("Please support urgent emergency medical treatments on SDN Donation. Even ₹250 helps save lives: " + window.location.href);
+    window.open(`https://api.whatsapp.com/send?text=${msg}`, '_blank');
   };
 
   const downloadReceiptPDF = () => {
@@ -138,9 +158,10 @@ export default function Home() {
   };
 
   return (
-    <div className="space-y-12 pb-16">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-b from-emerald-100/70 via-emerald-50/50 to-slate-50 pt-8 pb-12 px-4 text-center">
+    <div className="space-y-16 pb-20">
+      
+      {/* 1. Hero Section */}
+      <section className="bg-gradient-to-b from-emerald-100/70 via-emerald-50/50 to-slate-50 pt-10 pb-14 px-4 text-center">
         <div className="max-w-xl mx-auto space-y-5">
           <div className="relative mx-auto w-64 h-64 sm:w-72 sm:h-72 rounded-full p-2 bg-gradient-to-tr from-emerald-300 via-teal-100 to-white shadow-xl">
             <img 
@@ -149,51 +170,80 @@ export default function Home() {
               className="w-full h-full object-cover rounded-full shadow-inner"
             />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight leading-snug">
-            Need Funds For Your Medical Treatment?
+          <span className="inline-block text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full">
+            0% Platform Fee Guarantee
+          </span>
+          <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-snug">
+            Need Funds For Urgent Medical Treatment?
           </h1>
-          <p className="text-sm sm:text-base text-slate-600">
-            Raise money to pay hospital & medical bills for free with SDN Donation.
+          <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
+            Raise money to pay critical hospital & surgical bills. Transparent, direct UPI transfers verified with 12-digit UTR bank receipts.
           </p>
-          <Link 
-            to="/start-fundraiser" 
-            className="inline-block px-8 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/30 transition-all cursor-pointer"
-          >
-            Start a Free Fundraiser
-          </Link>
+          <div className="flex flex-col sm:flex-row justify-center gap-3 pt-2">
+            <button 
+              onClick={() => document.getElementById('donate-section').scrollIntoView({ behavior: 'smooth' })}
+              className="px-8 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/30 transition-all cursor-pointer"
+            >
+              Donate Now
+            </button>
+            <Link 
+              to="/start-fundraiser" 
+              className="px-8 py-3.5 bg-white border-2 border-emerald-600 text-emerald-700 hover:bg-emerald-50 font-bold rounded-xl shadow-sm transition-all"
+            >
+              Start Free Fundraiser
+            </Link>
+          </div>
         </div>
       </section>
 
-      {/* Trust Metrics */}
+      {/* 2. Trust Metrics Counter */}
       <section className="max-w-4xl mx-auto px-4 -mt-10">
-        <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-4 sm:p-6 grid grid-cols-3 gap-2 text-center">
+        <div className="bg-white rounded-3xl shadow-lg border border-slate-100 p-6 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
           <div>
-            <div className="text-2xl mb-1">⏱️</div>
-            <h4 className="text-xs sm:text-sm font-bold text-slate-800">Quick Funds</h4>
-            <p className="text-[11px] text-slate-500">Fast Disbursal</p>
-          </div>
-          <div className="border-x border-slate-100">
-            <div className="text-2xl mb-1">🤲</div>
-            <h4 className="text-xs sm:text-sm font-bold text-slate-800">40,000+</h4>
-            <p className="text-[11px] text-slate-500">Patients Supported</p>
+            <div className="text-3xl mb-1">⏱️</div>
+            <h4 className="text-base font-bold text-slate-800">Quick Funds</h4>
+            <p className="text-xs text-slate-500">Fast 24-hr Disbursal</p>
           </div>
           <div>
-            <div className="text-2xl mb-1">👥</div>
-            <h4 className="text-xs sm:text-sm font-bold text-slate-800">2+ Lakh</h4>
-            <p className="text-[11px] text-slate-500">Lives Impacted</p>
+            <div className="text-3xl mb-1">🤲</div>
+            <h4 className="text-base font-bold text-slate-800">40,000+</h4>
+            <p className="text-xs text-slate-500">Patients Supported</p>
+          </div>
+          <div>
+            <div className="text-3xl mb-1">👥</div>
+            <h4 className="text-base font-bold text-slate-800">2+ Lakh</h4>
+            <p className="text-xs text-slate-500">Lives Impacted</p>
+          </div>
+          <div>
+            <div className="text-3xl mb-1">🛡️</div>
+            <h4 className="text-base font-bold text-slate-800">100% Verified</h4>
+            <p className="text-xs text-slate-500">Direct Doctor Check</p>
           </div>
         </div>
       </section>
 
-      {/* Donation Form Card */}
-      <section className="max-w-xl mx-auto px-4">
-        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-100 space-y-5">
-          <div className="text-center">
+      {/* 3. Main Split Section: Donation Card + Live Donors Stream */}
+      <section id="donate-section" className="max-w-5xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        {/* Left: Donation Form Card */}
+        <div className="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-100 space-y-5">
+          <div className="border-b border-slate-100 pb-4">
             <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-              Verified Emergency Cause
+              Emergency Case #8841
             </span>
-            <h2 className="text-xl font-bold text-slate-900 mt-2">Support Critical Treatment</h2>
-            <p className="text-xs text-slate-500">Every contribution brings hope to a healing patient</p>
+            <h2 className="text-2xl font-bold text-slate-900 mt-3">Help Little Aarav Fight Acute Leukemia</h2>
+            <p className="text-xs text-slate-500 mt-1">Undergoing Bone Marrow Transplant at AIIMS Hospital</p>
+            
+            {/* Progress Bar */}
+            <div className="mt-4 space-y-1.5">
+              <div className="flex justify-between text-xs font-bold">
+                <span className="text-emerald-700">₹6,85,000 raised</span>
+                <span className="text-slate-400 font-normal">Target: ₹12,00,000</span>
+              </div>
+              <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                <div className="bg-emerald-600 h-2.5 rounded-full" style={{ width: '57%' }}></div>
+              </div>
+            </div>
           </div>
 
           <form onSubmit={handleOpenPayment} className="space-y-4">
@@ -206,13 +256,13 @@ export default function Home() {
                 required 
                 value={formData.name} 
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Full Name" 
+                placeholder="Donor Name" 
                 className="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               />
             </div>
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
-                Phone Number
+                Phone Number (for 80G Receipt)
               </label>
               <input 
                 type="tel" 
@@ -236,7 +286,7 @@ export default function Home() {
                     type="button"
                     onClick={() => setFormData({ ...formData, amount: amt })}
                     className={`py-2 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
-                      Number(formData.amount) === amt ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-slate-50 text-slate-700 border-slate-200'
+                      Number(formData.amount) === amt ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm' : 'bg-slate-50 text-slate-700 border-slate-200'
                     }`}
                   >
                     ₹{amt}
@@ -262,10 +312,117 @@ export default function Home() {
               Donate ₹{formData.amount || '0'} via UPI
             </button>
           </form>
+
+          <div className="pt-2 flex items-center justify-between">
+            <button 
+              type="button" 
+              onClick={shareOnWhatsApp}
+              className="text-xs font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1.5 cursor-pointer"
+            >
+              <span>📲</span> Share on WhatsApp
+            </button>
+            <span className="text-[11px] text-slate-400">Tax Exemption 80G Included</span>
+          </div>
+        </div>
+
+        {/* Right: Live Donors Ticker & Impact Stats */}
+        <div className="lg:col-span-5 space-y-6">
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+                Recent Community Donors
+              </h3>
+              <span className="text-[10px] bg-slate-100 font-bold text-slate-600 px-2 py-0.5 rounded-full">Live Feed</span>
+            </div>
+            <div className="space-y-3 divide-y divide-slate-100">
+              {donorsList.map((d, i) => (
+                <div key={i} className="pt-2.5 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2.5">
+                    <span className="h-7 w-7 rounded-full bg-emerald-100 text-emerald-800 font-black flex items-center justify-center text-[10px]">
+                      {d.name.charAt(0)}
+                    </span>
+                    <div>
+                      <p className="font-bold text-slate-800">{d.name}</p>
+                      <p className="text-[10px] text-slate-400">{d.time}</p>
+                    </div>
+                  </div>
+                  <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-lg">₹{d.amount}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-emerald-600 to-teal-700 text-white rounded-3xl p-6 shadow-md space-y-3">
+            <h4 className="font-bold text-base">Verified Medical Review</h4>
+            <p className="text-xs text-emerald-50 leading-relaxed">
+              Every medical case on SDN Donation is verified via doctor consultation letters, inpatient IP numbers, and hospital estimating teams.
+            </p>
+            <div className="bg-white/10 rounded-xl p-3 text-xs space-y-1">
+              <div className="flex justify-between"><span>Hospital:</span><span className="font-bold">AIIMS Oncology</span></div>
+              <div className="flex justify-between"><span>Lead Doctor:</span><span className="font-bold">Dr. K. N. Verma</span></div>
+              <div className="flex justify-between"><span>Verification Status:</span><span className="text-emerald-300 font-bold">100% Certified</span></div>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* QR Modal */}
+      {/* 4. Three Steps: How Crowdfunding Works */}
+      <section className="max-w-4xl mx-auto px-4">
+        <div className="text-center mb-8">
+          <h3 className="text-2xl font-extrabold text-slate-900">How Crowdfunding Works on SDN Donation</h3>
+          <p className="text-xs text-slate-500 mt-1">Simple, swift, and transparent process in 3 steps</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm text-center space-y-2">
+            <span className="text-3xl p-3 bg-emerald-50 rounded-2xl inline-block font-black text-emerald-600">1</span>
+            <h4 className="font-bold text-slate-800 text-sm">Start a Free Fundraiser</h4>
+            <p className="text-xs text-slate-500">Provide basic patient medical documents and treatment cost estimates.</p>
+          </div>
+          <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm text-center space-y-2">
+            <span className="text-3xl p-3 bg-emerald-50 rounded-2xl inline-block font-black text-emerald-600">2</span>
+            <h4 className="font-bold text-slate-800 text-sm">Share with Donors</h4>
+            <p className="text-xs text-slate-500">Share your cause across WhatsApp, social circles, and our community wall.</p>
+          </div>
+          <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm text-center space-y-2">
+            <span className="text-3xl p-3 bg-emerald-50 rounded-2xl inline-block font-black text-emerald-600">3</span>
+            <h4 className="font-bold text-slate-800 text-sm">Transfer Hospital Funds</h4>
+            <p className="text-xs text-slate-500">Receive funds instantly into verified bank accounts or direct to hospitals.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. Medical Causes Highlights */}
+      <section className="max-w-4xl mx-auto px-4">
+        <div className="text-center mb-6">
+          <h3 className="text-xl font-extrabold text-slate-900">Urgent Care Categories</h3>
+          <p className="text-xs text-slate-500 mt-1">Emergency treatments requiring community assistance</p>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-center space-y-1">
+            <span className="text-3xl">🎗️</span>
+            <h4 className="text-xs font-bold text-slate-800 pt-1">Cancer Care</h4>
+            <p className="text-[11px] text-slate-400">Max: ₹2 Crore</p>
+          </div>
+          <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-center space-y-1">
+            <span className="text-3xl">🫘</span>
+            <h4 className="text-xs font-bold text-slate-800 pt-1">Kidney Transplant</h4>
+            <p className="text-[11px] text-slate-400">Max: ₹46 Lakh</p>
+          </div>
+          <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-center space-y-1">
+            <span className="text-3xl">❤️</span>
+            <h4 className="text-xs font-bold text-slate-800 pt-1">Heart Surgeries</h4>
+            <p className="text-[11px] text-slate-400">Max: ₹35 Lakh</p>
+          </div>
+          <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-center space-y-1">
+            <span className="text-3xl">👶</span>
+            <h4 className="text-xs font-bold text-slate-800 pt-1">NICU Infant Care</h4>
+            <p className="text-[11px] text-slate-400">Max: ₹25 Lakh</p>
+          </div>
+        </div>
+      </section>
+
+      {/* UPI QR Modal with UTR Input */}
       {showQrModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white max-w-sm w-full rounded-3xl p-6 text-center space-y-4 shadow-2xl border border-slate-100">
@@ -331,6 +488,7 @@ export default function Home() {
               <div className="flex justify-between"><span>Receipt No:</span><span className="font-semibold text-slate-800">{receiptData.receiptNo}</span></div>
               <div className="flex justify-between"><span>UTR / Ref ID:</span><span className="font-mono text-emerald-700 font-semibold">{receiptData.txnId}</span></div>
               <div className="flex justify-between"><span>Date:</span><span className="font-semibold text-slate-800">{receiptData.date}</span></div>
+              <div className="flex justify-between"><span>Phone:</span><span className="font-semibold text-slate-800">{receiptData.phone}</span></div>
               <div className="flex justify-between border-t border-slate-200 pt-2 font-medium text-slate-800"><span>Amount:</span><span className="text-emerald-600 font-bold text-sm">₹{receiptData.amount}</span></div>
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
