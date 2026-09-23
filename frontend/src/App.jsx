@@ -9,7 +9,6 @@ export default function App() {
     amount: ''
   });
   const [loading, setLoading] = useState(false);
-  const [statusMessage, setStatusMessage] = useState({ text: '', type: '' });
   const [showQr, setShowQr] = useState(false);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [receiptData, setReceiptData] = useState(null);
@@ -37,7 +36,6 @@ export default function App() {
     setShowQr(true);
   };
 
-  // Payment Confirmation & Receipt Generation Logic
   const handlePaymentComplete = () => {
     const transactionDetails = {
       receiptNo: `REC-${Date.now().toString().slice(-6)}`,
@@ -57,20 +55,17 @@ export default function App() {
     setShowReceiptModal(true);
   };
 
-  // PDF Generator using jsPDF
   const downloadReceiptPDF = () => {
     if (!receiptData) return;
 
     const doc = new jsPDF();
 
-    // Border & Styling
     doc.setDrawColor(200, 200, 200);
     doc.rect(10, 10, 190, 277);
 
-    // Header / Trust Mark
     doc.setFont("helvetica", "bold");
     doc.setFontSize(22);
-    doc.setTextColor(37, 99, 235); // Blue
+    doc.setTextColor(37, 99, 235);
     doc.text("DONATION ACKNOWLEDGEMENT", 105, 28, { align: "center" });
 
     doc.setFontSize(11);
@@ -81,13 +76,11 @@ export default function App() {
     doc.setDrawColor(226, 232, 240);
     doc.line(20, 42, 190, 42);
 
-    // Receipt Meta Details
     doc.setFontSize(10);
     doc.setTextColor(71, 85, 105);
     doc.text(`Receipt No: ${receiptData.receiptNo}`, 20, 52);
     doc.text(`Date: ${receiptData.date}`, 145, 52);
 
-    // Donor Details Box
     doc.setFillColor(248, 250, 252);
     doc.roundedRect(20, 60, 170, 75, 4, 4, "F");
 
@@ -99,29 +92,28 @@ export default function App() {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(11);
     doc.setTextColor(51, 65, 85);
-    doc.text(`Donor Name:`, 30, 85);
+    doc.text("Donor Name:", 30, 85);
     doc.setFont("helvetica", "bold");
     doc.text(`${receiptData.donorName}`, 75, 85);
 
     doc.setFont("helvetica", "normal");
-    doc.text(`Contact Number:`, 30, 95);
+    doc.text("Contact Number:", 30, 95);
     doc.setFont("helvetica", "bold");
     doc.text(`${receiptData.phone}`, 75, 95);
 
     doc.setFont("helvetica", "normal");
-    doc.text(`Amount Contributed:`, 30, 105);
+    doc.text("Amount Contributed:", 30, 105);
     doc.setFont("helvetica", "bold");
-    doc.setTextColor(22, 101, 52); // Green
+    doc.setTextColor(22, 101, 52);
     doc.text(`INR ${receiptData.amount}/-`, 75, 105);
 
     doc.setFont("helvetica", "normal");
     doc.setTextColor(51, 65, 85);
-    doc.text(`Paid to UPI ID:`, 30, 115);
+    doc.text("Paid to UPI ID:", 30, 115);
     doc.text(`${receiptData.upiId}`, 75, 115);
 
     doc.line(20, 145, 190, 145);
 
-    // Note & Tax details
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
     doc.setTextColor(15, 23, 42);
@@ -130,42 +122,25 @@ export default function App() {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9.5);
     doc.setTextColor(100, 116, 139);
-    doc.text(
-      "1. Thank you for supporting student digital literacy. Your support aids device funding & access.",
-      20,
-      166
-    );
-    doc.text(
-      "2. Eligible for deductions under 80G as per government regulations.",
-      20,
-      174
-    );
-    doc.text(
-      "3. This is a computer generated acknowledgement slip and does not require a physical signature.",
-      20,
-      182
-    );
+    doc.text("1. Thank you for supporting student digital literacy. Your support aids device funding & access.", 20, 166);
+    doc.text("2. Eligible for deductions under 80G as per government regulations.", 20, 174);
+    doc.text("3. This is a computer generated acknowledgement slip and does not require a physical signature.", 20, 182);
 
-    // Footer
     doc.setDrawColor(226, 232, 240);
     doc.line(20, 250, 190, 250);
     doc.setFontSize(9);
     doc.setTextColor(148, 163, 184);
     doc.text("Student Welfare Digital Initiative • Verified Campaign", 105, 260, { align: "center" });
 
-    // Download PDF directly
     doc.save(`Donation_Receipt_${receiptData.receiptNo}.pdf`);
   };
 
   return (
     <div className="min-h-screen bg-slate-100 py-8 px-4 sm:px-6 lg:px-8 flex flex-col justify-center items-center">
-      
-      {/* Main Container: 2-Column Split */}
       <div className="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
-        {/* LEFT COLUMN: Campaign Story, Image & Impact */}
+        {/* Left Column */}
         <div className="lg:col-span-7 bg-white rounded-3xl shadow-sm border border-slate-200/80 p-6 sm:p-8 space-y-6">
-          
           <div className="relative w-full h-64 sm:h-72 rounded-2xl overflow-hidden shadow-inner group">
             <img 
               src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=1200&q=80" 
@@ -190,7 +165,6 @@ export default function App() {
             </p>
           </div>
 
-          {/* Trust Highlights */}
           <div className="grid grid-cols-3 gap-3 pt-4 border-t border-slate-100">
             <div className="flex items-center space-x-2.5 p-2 rounded-xl bg-slate-50">
               <span className="text-2xl">🛡️</span>
@@ -215,7 +189,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Social Proof */}
           <div className="bg-blue-50/70 border border-blue-100 rounded-2xl p-4 flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="flex -space-x-2 overflow-hidden">
@@ -229,12 +202,10 @@ export default function App() {
             </div>
             <span className="text-xs font-semibold text-blue-700">#EducationForAll</span>
           </div>
-
         </div>
 
-        {/* RIGHT COLUMN: Interactive Donation Form */}
+        {/* Right Column */}
         <div className="lg:col-span-5 bg-white rounded-3xl shadow-xl border border-slate-100 p-6 sm:p-8 sticky top-6">
-          
           <div className="text-center mb-5">
             <span className="inline-block px-3 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full uppercase tracking-wider mb-2 border border-blue-200">
               Active Campaign
@@ -245,7 +216,6 @@ export default function App() {
             </p>
           </div>
 
-          {/* Campaign Progress */}
           <div className="mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-200/70">
             <div className="flex justify-between text-xs sm:text-sm font-semibold text-slate-700 mb-2">
               <span className="text-blue-600 font-bold">₹{collected.toLocaleString()} raised</span>
@@ -259,7 +229,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Form */}
           <form onSubmit={handlePayment} className="space-y-4">
             <div>
               <label className="block text-xs font-semibold uppercase text-slate-600 mb-1 tracking-wide">
@@ -284,7 +253,7 @@ export default function App() {
                 type="tel"
                 name="phone"
                 required
-                value={formData.phone || ''}
+                value={formData.phone}
                 onChange={handleChange}
                 placeholder="Enter 10-digit mobile number"
                 pattern="[0-9]{10}"
@@ -297,7 +266,6 @@ export default function App() {
               <label className="block text-xs font-semibold uppercase text-slate-600 mb-1.5 tracking-wide">
                 Select or Enter Amount (INR)
               </label>
-              
               <div className="grid grid-cols-4 gap-2 mb-2.5">
                 {presetAmounts.map((amt) => (
                   <button
@@ -342,7 +310,7 @@ export default function App() {
           <p className="text-center text-xs text-slate-400 mt-4 flex items-center justify-center gap-1">
             🔒 Secure UPI payment powered by QR code
           </p>
-          
+
           <div className="flex flex-wrap justify-center gap-3 text-xs text-slate-400 mt-4 border-t border-slate-100 pt-3">
             <a href="/about.html" target="_blank" rel="noreferrer" className="hover:text-blue-600">About Us</a>
             <span>•</span>
@@ -353,7 +321,6 @@ export default function App() {
             <a href="/privacy.html" target="_blank" rel="noreferrer" className="hover:text-blue-600">Privacy</a>
           </div>
         </div>
-
       </div>
 
       {/* UPI QR Modal */}
@@ -411,7 +378,6 @@ export default function App() {
               >
                 Payment Done
               </button>
-
               <button
                 type="button"
                 onClick={() => setShowQr(false)}
@@ -431,7 +397,7 @@ export default function App() {
         </div>
       )}
 
-      {/* ACKNOWLEDGEMENT / RECEIPT MODAL */}
+      {/* Acknowledgement / Receipt Modal */}
       {showReceiptModal && receiptData && (
         <div style={{
           position: 'fixed',
@@ -479,4 +445,20 @@ export default function App() {
                 type="button"
                 onClick={downloadReceiptPDF}
                 className="flex-1 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
-              ></button>
+              >
+                <span>📥</span> Download Receipt (PDF)
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowReceiptModal(false)}
+                className="py-3 px-5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm rounded-xl transition-all cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
