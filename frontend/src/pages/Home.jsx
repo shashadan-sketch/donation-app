@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import AdBanner from "../components/AdBanner";
-import TopBanner from "../components/TopBanner";
+
 
 export default function Home() {
   const [selectedAmount, setSelectedAmount] = useState(500);
@@ -389,7 +389,7 @@ export default function Home() {
         </div>
       )}
 <AdBanner />
-<TopBanner />
+
     </div>
   );
   
