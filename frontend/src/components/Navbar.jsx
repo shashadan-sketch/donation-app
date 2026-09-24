@@ -64,7 +64,27 @@ export default function Navbar() {
           </div>
 
           {/* Right Action & Stylized Menu */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Direct APK Download Button (Desktop View) */}
+            <a
+              href="/sdn-donation.apk"
+              download="SDN-Donation.apk"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-xl shadow-sm transition active:scale-95"
+              title="Download Android App"
+            >
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                className="w-3.5 h-3.5" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor" 
+                strokeWidth={2.5}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              <span>Download App</span>
+            </a>
+
             <Link 
               to="/start-fundraiser" 
               className="hidden sm:inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md shadow-emerald-600/20 transition transform active:scale-95"
@@ -119,12 +139,20 @@ export default function Navbar() {
                   >
                     <span>📞</span> Contact Support
                   </Link>
-                  
+
+                  {/* Direct APK Download in Mobile Dropdown */}
                   <div className="border-t border-slate-100 my-1.5"></div>
+                  <a
+                    href="/sdn-donation.apk"
+                    download="SDN-Donation.apk"
+                    className="flex sm:hidden items-center gap-2.5 px-3 py-2 text-xs font-bold text-emerald-700 bg-emerald-50/70 hover:bg-emerald-100 rounded-xl transition"
+                  >
+                    <span>📲</span> Download Android App
+                  </a>
                   
                   <Link 
                     to="/start-fundraiser" 
-                    className="flex sm:hidden items-center gap-2 px-3 py-2 text-xs font-bold text-emerald-600 hover:bg-emerald-50 rounded-xl transition"
+                    className="flex sm:hidden items-center gap-2 px-3 py-2 text-xs font-bold text-emerald-600 hover:bg-emerald-50 rounded-xl transition mt-1"
                   >
                     <span>➕</span> Start Fundraiser
                   </Link>
