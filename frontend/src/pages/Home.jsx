@@ -1,357 +1,392 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import QRCode from "react-qr-code";
-import jsPDF from 'jspdf';
 
 export default function Home() {
-  const [formData, setFormData] = useState({ name: '', phone: '', amount: '500' });
+  const [selectedAmount, setSelectedAmount] = useState(500);
+  const [customAmount, setCustomAmount] = useState('');
+  const [donorName, setDonorName] = useState('');
+  const [donorPhone, setDonorPhone] = useState('');
   const [utrNumber, setUtrNumber] = useState('');
-  const [utrError, setUtrError] = useState('');
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [showQrModal, setShowQrModal] = useState(false);
-  const [showReceiptModal, setShowReceiptModal] = useState(false);
-  const [receiptData, setReceiptData] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [paymentDone, setPaymentDone] = useState(false);
 
-  const presetAmounts = [250, 500, 1000, 2500];
+  const finalAmount = customAmount ? Number(customAmount) : selectedAmount;
 
-  const handleOpenPayment = (e) => {
+  // Real UPI String Generator
+  const upiId = "sdnsheikh375@okhdfcbank";
+  const upiUrl = `upi://pay?pa=${upiId}&pn=SDN%20Donation&am=${finalAmount}&cu=INR`;
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiUrl)}`;
+
+  const urgentCases = [
+    {
+      id: 1,
+      title: "Urgent Heart Surgery for 4-Year-Old Aarav",
+      hospital: "AIIMS New Delhi",
+      image: "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=600&q=80",
+      raised: "₹3,85,000",
+      goal: "₹5,00,000",
+      percent: 77,
+      tag: "Critical - 4 Days Left"
+    },
+    {
+      id: 2,
+      title: "Emergency Chemotherapy Aid for Ramesh Kumar",
+      hospital: "Tata Memorial Hospital",
+      image: "https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b?auto=format&fit=crop&w=600&q=80",
+      raised: "₹1,90,000",
+      goal: "₹4,00,000",
+      percent: 48,
+      tag: "Urgent Support"
+    },
+    {
+      id: 3,
+      title: "Severe Road Accident ICU Trauma Recovery",
+      hospital: "Fortis Healthcare",
+      image: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=600&q=80",
+      raised: "₹1,25,000",
+      goal: "₹3,00,000",
+      percent: 42,
+      tag: "ICU Ventilator"
+    }
+  ];
+
+  const handleStartDonation = (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.phone || !formData.amount) {
-      alert("Please enter donor name, phone and amount");
+    if (!finalAmount || finalAmount <= 0) {
+      alert("Please enter a valid donation amount.");
       return;
     }
-    setUtrNumber('');
-    setUtrError('');
-    setShowQrModal(true);
+    setShowModal(true);
   };
 
-  const handleVerifyAndComplete = () => {
-    const cleanUtr = utrNumber.trim();
-    if (!cleanUtr || cleanUtr.length !== 12 || !/^\d{12}$/.test(cleanUtr)) {
-      setUtrError("Please enter a valid 12-digit UPI Reference / UTR Number");
+  const handleVerifyUTR = (e) => {
+    e.preventDefault();
+    if (utrNumber.trim().length < 6) {
+      alert("Please enter a valid 12-digit UPI UTR number.");
       return;
     }
-
-    setUtrError('');
-    setIsVerifying(true);
-
-    setTimeout(() => {
-      const transactionDetails = {
-        receiptNo: `SDN-${Date.now().toString().slice(-6)}`,
-        txnId: cleanUtr,
-        date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
-        donorName: formData.name,
-        phone: formData.phone,
-        amount: formData.amount,
-        upiId: 'sdnsheikh375@okhdfcbank'
-      };
-
-      setReceiptData(transactionDetails);
-      setIsVerifying(false);
-      setShowQrModal(false);
-      setShowReceiptModal(true);
-    }, 1200);
-  };
-
-  const downloadReceiptPDF = () => {
-    if (!receiptData) return;
-    const doc = new jsPDF();
-    doc.setDrawColor(200, 200, 200);
-    doc.rect(10, 10, 190, 277);
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(22);
-    doc.setTextColor(5, 150, 105);
-    doc.text("SDN DONATION ACKNOWLEDGEMENT", 105, 28, { align: "center" });
-
-    doc.setFontSize(11);
-    doc.setTextColor(100, 116, 139);
-    doc.setFont("helvetica", "normal");
-    doc.text("Emergency Medical Aid & Life Care Initiative", 105, 36, { align: "center" });
-
-    doc.setDrawColor(226, 232, 240);
-    doc.line(20, 42, 190, 42);
-
-    doc.setFontSize(10);
-    doc.setTextColor(71, 85, 105);
-    doc.text(`Receipt No: ${receiptData.receiptNo}`, 20, 52);
-    doc.text(`Date: ${receiptData.date}`, 145, 52);
-
-    doc.setFillColor(240, 253, 244);
-    doc.roundedRect(20, 60, 170, 85, 4, 4, "F");
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
-    doc.setTextColor(15, 23, 42);
-    doc.text("Contribution Summary", 30, 72);
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
-    doc.setTextColor(51, 65, 85);
-    doc.text("Donor Name:", 30, 85);
-    doc.setFont("helvetica", "bold");
-    doc.text(`${receiptData.donorName}`, 80, 85);
-
-    doc.setFont("helvetica", "normal");
-    doc.text("Contact Number:", 30, 95);
-    doc.setFont("helvetica", "bold");
-    doc.text(`${receiptData.phone}`, 80, 95);
-
-    doc.setFont("helvetica", "normal");
-    doc.text("UTR / Ref No:", 30, 105);
-    doc.setFont("helvetica", "bold");
-    doc.text(`${receiptData.txnId}`, 80, 105);
-
-    doc.setFont("helvetica", "normal");
-    doc.text("Paid to UPI:", 30, 115);
-    doc.setFont("helvetica", "bold");
-    doc.text(`${receiptData.upiId}`, 80, 115);
-
-    doc.setFont("helvetica", "normal");
-    doc.text("Amount Contributed:", 30, 125);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(22, 101, 52);
-    doc.text(`INR ${receiptData.amount}/- (Verified)`, 80, 125);
-
-    doc.setDrawColor(226, 232, 240);
-    doc.line(20, 155, 190, 155);
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.setTextColor(15, 23, 42);
-    doc.text("Tax Exemption & Verification Notice:", 20, 168);
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9.5);
-    doc.setTextColor(100, 116, 139);
-    doc.text("1. Thank you for your generous medical contribution. Every rupee saves precious lives.", 20, 176);
-    doc.text("2. Eligible for deductions under Section 80G as per statutory provisions.", 20, 184);
-    doc.text("3. Authenticated system generated transaction acknowledgment slip.", 20, 192);
-
-    doc.setDrawColor(226, 232, 240);
-    doc.line(20, 250, 190, 250);
-    doc.setFontSize(9);
-    doc.setTextColor(148, 163, 184);
-    doc.text("SDN Donation Foundation • Verified Medical Crowdfunding", 105, 260, { align: "center" });
-
-    doc.save(`SDN_Receipt_${receiptData.receiptNo}.pdf`);
+    setPaymentDone(true);
   };
 
   return (
-    <div className="space-y-12 pb-16">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-b from-emerald-100/70 via-emerald-50/50 to-slate-50 pt-8 pb-12 px-4 text-center">
-        <div className="max-w-xl mx-auto space-y-5">
-          <div className="relative mx-auto w-64 h-64 sm:w-72 sm:h-72 rounded-full p-2 bg-gradient-to-tr from-emerald-300 via-teal-100 to-white shadow-xl">
-            <img 
-              src="https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=800&q=80" 
-              alt="Medical Care" 
-              className="w-full h-full object-cover rounded-full shadow-inner"
-            />
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight leading-snug">
-            Need Funds For Your Medical Treatment?
-          </h1>
-          <p className="text-sm sm:text-base text-slate-600">
-            Raise money to pay hospital & medical bills for free with SDN Donation.
-          </p>
-          <Link 
-            to="/start-fundraiser" 
-            className="inline-block px-8 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/30 transition-all cursor-pointer"
-          >
-            Start a Free Fundraiser
-          </Link>
-        </div>
-      </section>
-
-      {/* Trust Metrics */}
-      <section className="max-w-4xl mx-auto px-4 -mt-10">
-        <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-4 sm:p-6 grid grid-cols-3 gap-2 text-center">
-          <div>
-            <div className="text-2xl mb-1">⏱️</div>
-            <h4 className="text-xs sm:text-sm font-bold text-slate-800">Quick Funds</h4>
-            <p className="text-[11px] text-slate-500">Fast Disbursal</p>
-          </div>
-          <div className="border-x border-slate-100">
-            <div className="text-2xl mb-1">🤲</div>
-            <h4 className="text-xs sm:text-sm font-bold text-slate-800">40,000+</h4>
-            <p className="text-[11px] text-slate-500">Patients Supported</p>
-          </div>
-          <div>
-            <div className="text-2xl mb-1">👥</div>
-            <h4 className="text-xs sm:text-sm font-bold text-slate-800">2+ Lakh</h4>
-            <p className="text-[11px] text-slate-500">Lives Impacted</p>
-          </div>
-        </div>
-      </section>
-
-      {/* Donation Form Card */}
-      <section className="max-w-xl mx-auto px-4">
-        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-100 space-y-5">
-          <div className="text-center">
-            <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-              Verified Emergency Cause
+    <div className="bg-slate-50 min-h-screen text-slate-800">
+      
+      {/* 1. HERO SECTION WITH EMBEDDED DONATION BOX */}
+      <section className="bg-gradient-to-b from-emerald-50/70 to-white py-12 px-4 sm:px-6 lg:px-8 border-b border-slate-200">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+          
+          {/* Left Text Pitch */}
+          <div className="lg:col-span-7 space-y-6">
+            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-ping"></span>
+              Verified Medical Relief Program
             </span>
-            <h2 className="text-xl font-bold text-slate-900 mt-2">Support Critical Treatment</h2>
-            <p className="text-xs text-slate-500">Every contribution brings hope to a healing patient</p>
+            
+            <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+              Empowering Lives with <span className="text-emerald-600">SDN Donation</span>
+            </h1>
+            
+            <p className="text-slate-600 text-base sm:text-lg leading-relaxed">
+              100% direct hospital disbursement. No middlemen, zero commission, and immediate tax exemption digital receipts for every single contribution.
+            </p>
+
+            <div className="flex flex-wrap gap-4 pt-2">
+              <a 
+                href="#direct-pay-form" 
+                className="px-6 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-lg shadow-emerald-600/25 transition text-sm cursor-pointer"
+              >
+                Donate Directly via UPI ↓
+              </a>
+              <Link 
+                to="/causes" 
+                className="px-6 py-3.5 bg-white border border-slate-300 hover:border-emerald-500 text-slate-700 font-bold rounded-2xl shadow-sm transition text-sm"
+              >
+                Browse All Patients
+              </Link>
+            </div>
           </div>
 
-          <form onSubmit={handleOpenPayment} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
-                Your Full Name
-              </label>
-              <input 
-                type="text" 
-                required 
-                value={formData.name} 
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Full Name" 
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-              />
+          {/* Right Live Donation Box with Preset Amounts */}
+          <div id="direct-pay-form" className="lg:col-span-5 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-xl space-y-5">
+            <div className="flex justify-between items-center pb-2 border-b border-slate-100">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Fast UPI Contribution</span>
+              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">0% Fee</span>
             </div>
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">
-                Phone Number
-              </label>
-              <input 
-                type="tel" 
-                required 
-                maxLength="10" 
-                pattern="[0-9]{10}"
-                value={formData.phone} 
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="10-digit mobile number" 
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
-                Contribution Amount (INR)
-              </label>
-              <div className="grid grid-cols-4 gap-2 mb-2.5">
-                {presetAmounts.map((amt) => (
+
+            <form onSubmit={handleStartDonation} className="space-y-4">
+              {/* Preset Buttons */}
+              <label className="block text-xs font-bold text-slate-700 uppercase">Select Amount (₹)</label>
+              <div className="grid grid-cols-4 gap-2">
+                {[200, 500, 1000, 2000].map((amt) => (
                   <button
                     key={amt}
                     type="button"
-                    onClick={() => setFormData({ ...formData, amount: amt })}
-                    className={`py-2 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
-                      Number(formData.amount) === amt ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-slate-50 text-slate-700 border-slate-200'
+                    onClick={() => { setSelectedAmount(amt); setCustomAmount(''); }}
+                    className={`py-2 text-xs font-bold rounded-xl border transition ${
+                      finalAmount === amt && !customAmount
+                        ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+                        : "bg-slate-50 text-slate-700 border-slate-200 hover:border-emerald-400"
                     }`}
                   >
                     ₹{amt}
                   </button>
                 ))}
               </div>
-              <div className="relative">
-                <span className="absolute left-3.5 top-2.5 text-slate-400 font-bold">₹</span>
+
+              {/* Custom Input */}
+              <input 
+                type="number" 
+                placeholder="Or Enter Custom Amount (₹)" 
+                value={customAmount}
+                onChange={(e) => setCustomAmount(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-emerald-500"
+              />
+
+              <div className="grid grid-cols-2 gap-3">
                 <input 
-                  type="number" 
-                  min="1" 
-                  required 
-                  value={formData.amount} 
-                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                  className="w-full pl-8 pr-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  type="text" 
+                  placeholder="Your Name (Optional)" 
+                  value={donorName}
+                  onChange={(e) => setDonorName(e.target.value)}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500"
+                />
+                <input 
+                  type="tel" 
+                  placeholder="Phone / WhatsApp" 
+                  value={donorPhone}
+                  onChange={(e) => setDonorPhone(e.target.value)}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500"
                 />
               </div>
-            </div>
-            <button 
-              type="submit" 
-              className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/30 transition-all cursor-pointer text-sm"
-            >
-              Donate ₹{formData.amount || '0'} via UPI
-            </button>
-          </form>
+
+              <button 
+                type="submit"
+                className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-emerald-600/20 transition cursor-pointer"
+              >
+                Proceed to Pay ₹{finalAmount || 0}
+              </button>
+            </form>
+          </div>
+
         </div>
       </section>
 
-      {/* QR Modal */}
-      {showQrModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white max-w-sm w-full rounded-3xl p-6 text-center space-y-4 shadow-2xl border border-slate-100">
-            <div>
-              <h3 className="text-lg font-bold text-slate-800">Scan to Pay with UPI</h3>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Paying <strong className="text-slate-900 font-semibold">₹{formData.amount}</strong> to <strong>SDN Donation</strong>
-              </p>
+      {/* 2. STATS BAR */}
+      <section className="py-8 bg-white border-b border-slate-200">
+        <div className="max-w-6xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+          <div>
+            <div className="text-2xl sm:text-3xl font-black text-emerald-600">₹25,40,000+</div>
+            <div className="text-xs font-semibold text-slate-500 mt-1">Medical Funds Raised</div>
+          </div>
+          <div>
+            <div className="text-2xl sm:text-3xl font-black text-emerald-600">120+</div>
+            <div className="text-xs font-semibold text-slate-500 mt-1">Surgeries Completed</div>
+          </div>
+          <div>
+            <div className="text-2xl sm:text-3xl font-black text-emerald-600">0%</div>
+            <div className="text-xs font-semibold text-slate-500 mt-1">Platform Commission</div>
+          </div>
+          <div>
+            <div className="text-2xl sm:text-3xl font-black text-emerald-600">100%</div>
+            <div className="text-xs font-semibold text-slate-500 mt-1">Verified Medical Proofs</div>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. URGENT CAMPAIGNS SECTION */}
+      <section className="py-14 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 gap-4">
+          <div>
+            <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+              Needs Urgent Help
+            </span>
+            <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold text-slate-900">
+              Active Medical Emergency Cases
+            </h2>
+          </div>
+          <Link to="/causes" className="text-emerald-700 font-bold text-sm hover:underline flex items-center gap-1">
+            See all medical cases →
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {urgentCases.map((c) => (
+            <div key={c.id} className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between">
+              <div>
+                <div className="relative h-44 w-full">
+                  <img src={c.image} alt={c.title} className="w-full h-full object-cover" />
+                  <span className="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow">
+                    {c.tag}
+                  </span>
+                </div>
+                <div className="p-5">
+                  <div className="text-[11px] font-semibold text-slate-500 mb-1">🏥 {c.hospital}</div>
+                  <h3 className="font-bold text-slate-900 text-base leading-snug line-clamp-2">
+                    {c.title}
+                  </h3>
+                  
+                  <div className="mt-4">
+                    <div className="flex justify-between text-xs font-semibold mb-1">
+                      <span className="text-emerald-700 font-bold">{c.raised}</span>
+                      <span className="text-slate-400">Target: {c.goal}</span>
+                    </div>
+                    <div className="w-full bg-slate-100 rounded-full h-2">
+                      <div className="bg-emerald-500 h-2 rounded-full" style={{ width: `${c.percent}%` }}></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-5 pt-0">
+                <Link 
+                  to="/causes" 
+                  className="block text-center w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition"
+                >
+                  Donate to this Patient
+                </Link>
+              </div>
             </div>
-            <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 inline-block shadow-inner">
-              <QRCode value={`upi://pay?pa=sdnsheikh375@okhdfcbank&pn=SDN%20Donation&am=${formData.amount}&cu=INR`} size={180} />
+          ))}
+        </div>
+      </section>
+
+      {/* 4. HOW SDN DONATION WORKS */}
+      <section className="py-14 bg-white border-t border-b border-slate-200 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto text-center mb-10">
+          <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+            Transparent Workflow
+          </span>
+          <h2 className="mt-3 text-2xl sm:text-3xl font-extrabold text-slate-900">
+            How SDN Donation Operates
+          </h2>
+          <p className="mt-2 text-slate-600 text-sm">Direct, quick, and completely accountable.</p>
+        </div>
+
+        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 text-center space-y-3">
+            <div className="w-12 h-12 bg-emerald-100 text-emerald-700 font-black rounded-2xl flex items-center justify-center mx-auto text-lg">
+              1
             </div>
-            <p className="text-xs text-slate-500">
-              UPI ID: <span className="font-mono font-semibold text-slate-700">sdnsheikh375@okhdfcbank</span>
+            <h3 className="font-bold text-slate-900 text-base">Select or Scan</h3>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Pick a verified patient case or scan the direct UPI QR code via your preferred payment app.
             </p>
-            <div className="text-left bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-2">
-              <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wide">
-                Enter 12-Digit UTR / UPI Ref No. *
-              </label>
-              <input
-                type="text"
-                maxLength="12"
-                value={utrNumber}
-                onChange={(e) => setUtrNumber(e.target.value.replace(/\D/g, ''))}
-                placeholder="e.g. 412356789012"
-                className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
-              />
-              {utrError && <p className="text-red-500 text-[11px] font-semibold">{utrError}</p>}
+          </div>
+
+          <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 text-center space-y-3">
+            <div className="w-12 h-12 bg-emerald-100 text-emerald-700 font-black rounded-2xl flex items-center justify-center mx-auto text-lg">
+              2
             </div>
-            <div className="flex gap-2.5 pt-1">
-              <button
-                type="button"
-                disabled={isVerifying}
-                onClick={handleVerifyAndComplete}
-                className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50"
-              >
-                {isVerifying ? "Verifying UTR..." : "Verify & Get Receipt"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowQrModal(false)}
-                className="py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition-all cursor-pointer"
-              >
-                Cancel
-              </button>
+            <h3 className="font-bold text-slate-900 text-base">Submit 12-Digit UTR</h3>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Enter your transaction UTR reference number to automatically tag your contribution to the patient.
+            </p>
+          </div>
+
+          <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 text-center space-y-3">
+            <div className="w-12 h-12 bg-emerald-100 text-emerald-700 font-black rounded-2xl flex items-center justify-center mx-auto text-lg">
+              3
             </div>
+            <h3 className="font-bold text-slate-900 text-base">Download Tax Receipt</h3>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Instantly generate your PDF donation invoice and share it directly on WhatsApp.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. FUNDRAISER CTA BANNER */}
+      <section className="py-14 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto text-center">
+        <div className="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-3xl p-8 sm:p-12 text-white shadow-xl space-y-4">
+          <h2 className="text-2xl sm:text-4xl font-black">
+            Do You Know a Patient in Critical Need?
+          </h2>
+          <p className="text-emerald-100 text-sm sm:text-base max-w-xl mx-auto">
+            Raise emergency funds with 0% platform charges. Our medical committee verifies documents within 2-4 hours.
+          </p>
+          <div className="pt-2">
+            <Link 
+              to="/start-fundraiser"
+              className="inline-block px-8 py-3.5 bg-white text-emerald-800 hover:bg-slate-100 font-extrabold rounded-2xl shadow-lg transition text-sm"
+            >
+              Start Free Medical Fundraiser →
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* POPUP UPI QR & UTR MODAL */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-md rounded-3xl p-6 sm:p-8 shadow-2xl space-y-5 border border-slate-200 relative">
+            <button 
+              onClick={() => { setShowModal(false); setPaymentDone(false); }}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 text-xl font-bold cursor-pointer"
+            >
+              ✕
+            </button>
+
+            {!paymentDone ? (
+              <div className="text-center space-y-4">
+                <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+                  Scan to Donate ₹{finalAmount}
+                </span>
+
+                <div className="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100 inline-block shadow-inner">
+                  <img 
+                    src={qrCodeUrl} 
+                    alt="SDN UPI QR" 
+                    className="w-48 h-48 mx-auto rounded-xl shadow-sm"
+                  />
+                </div>
+
+                <div>
+                  <p className="text-xs font-bold text-slate-700">UPI ID: <span className="text-emerald-700 font-mono select-all">sdndonation@upi</span></p>
+                  <p className="text-[11px] text-slate-500">Scan via Google Pay, PhonePe, Paytm, BHIM</p>
+                </div>
+
+                <form onSubmit={handleVerifyUTR} className="space-y-3 pt-2 text-left">
+                  <label className="block text-xs font-bold text-slate-700 uppercase">
+                    Enter 12-Digit UTR / Ref Number *
+                  </label>
+                  <input 
+                    type="text" 
+                    required
+                    placeholder="e.g. 4082XXXXXXXX" 
+                    value={utrNumber}
+                    onChange={(e) => setUtrNumber(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-emerald-500"
+                  />
+                  <button 
+                    type="submit"
+                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition cursor-pointer"
+                  >
+                    Confirm Payment & Verify UTR
+                  </button>
+                </form>
+              </div>
+            ) : (
+              <div className="text-center space-y-4 py-4">
+                <div className="w-12 h-12 bg-emerald-500 text-white rounded-full flex items-center justify-center mx-auto text-xl font-bold">
+                  ✓
+                </div>
+                <h3 className="text-lg font-bold text-slate-900">Donation Recorded!</h3>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Thank you <strong>{donorName || "Supporter"}</strong> for donating <strong>₹{finalAmount}</strong>. Your UTR ref <strong>{utrNumber}</strong> has been tagged to the medical patient.
+                </p>
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="w-full py-2.5 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded-xl transition"
+                >
+                  Close & Done
+                </button>
+              </div>
+            )}
+
           </div>
         </div>
       )}
 
-      {/* Receipt Modal */}
-      {showReceiptModal && receiptData && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-6 sm:p-8 rounded-3xl max-w-md w-full mx-4 shadow-2xl text-center space-y-5">
-            <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-3xl shadow-sm">
-              ✓
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-slate-800">Thank You, {receiptData.donorName}!</h3>
-              <p className="text-slate-500 text-xs sm:text-sm mt-1">Your contribution of ₹{receiptData.amount} is verified.</p>
-            </div>
-            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 text-left text-xs space-y-2 text-slate-600">
-              <div className="flex justify-between"><span>Receipt No:</span><span className="font-semibold text-slate-800">{receiptData.receiptNo}</span></div>
-              <div className="flex justify-between"><span>UTR / Ref ID:</span><span className="font-mono text-emerald-700 font-semibold">{receiptData.txnId}</span></div>
-              <div className="flex justify-between"><span>Date:</span><span className="font-semibold text-slate-800">{receiptData.date}</span></div>
-              <div className="flex justify-between border-t border-slate-200 pt-2 font-medium text-slate-800"><span>Amount:</span><span className="text-emerald-600 font-bold text-sm">₹{receiptData.amount}</span></div>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <button
-                type="button"
-                onClick={downloadReceiptPDF}
-                className="flex-1 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                📥 Download Receipt (PDF)
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowReceiptModal(false)}
-                className="py-3 px-5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm rounded-xl transition-all cursor-pointer"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
